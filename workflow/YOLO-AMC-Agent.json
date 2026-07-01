@@ -1,0 +1,1283 @@
+{
+  "name": "YOLO-AMC Agent Streamlit",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen3:4b\",\n  \"stream\": false,\n  \"think\": false,\n  \"format\": \"json\",\n  \"prompt\": \"你是 YOLO-AMC 任務分類器。\\n\\n只能輸出一個 JSON object。\\n禁止解釋。\\n禁止分析。\\n禁止 Markdown。\\n禁止額外文字。\\n\\nintent 只能是：\\n- detection\\n- open_folder\\n- history\\n- explain_term\\n- help\\n- other\\n\\n【最高優先級：help】\\n如果使用者詢問：\\n可以做什麼\\n有哪些功能\\n功能介紹\\n功能列表\\n範例指令\\nhelp\\n怎麼使用\\n\\n則 intent=help。\\n\\n【第二優先級：explain_term】\\n只有使用者詢問名詞定義、意思、是什麼、差在哪時，intent=explain_term。\\n\\nterm 對應規則：\\n信心值、confidence → confidence\\nFPS → fps\\nBounding Box、邊界框 → bounding_box\\nYOLO-AMC → yolo_amc\\nGAM 和 SA 差異、GAM vs SA、模型差異 → gam_sa\\n\\n注意：\\n什麼是信心值 → explain_term\\n最近信心值如何 → history\\n信心值最高的一次 → history\\n最高信心值 → history\\n\\n【第三優先級：history】\\n只要是在詢問歷史紀錄、過去結果、統計、分析、比較、趨勢、某一次最佳紀錄，一律 intent=history。\\n\\n重要判斷：\\n以下語句即使包含「快速」、「最快」、「偵測」，也必須判定為 history，不得判定為 detection：\\n最快速偵測的一次\\n最快偵測的一次\\n最快的一次\\n最快速的一次\\n最快執行紀錄\\n最快速度紀錄\\n速度最快的一次\\n信心值最高的一次\\n最高信心值\\n最佳信心值\\n最高平均信心值\\n\\n例如：\\n最近一次紀錄\\n上一次偵測結果\\n最近三次紀錄\\n歷史統計\\n最高信心值\\n信心值最高的一次\\n最快執行紀錄\\n最快速偵測的一次\\n最近信心值如何\\n最近表現如何\\n最近速度如何\\n最近執行時間如何\\n最近框數如何\\n最近裂縫數量如何\\n最近模型表現如何\\n最近設備表現如何\\n信心值趨勢\\n速度趨勢\\n執行時間趨勢\\n框數趨勢\\n裂縫數量趨勢\\nGAM 最近表現如何\\nSA 最近表現如何\\nPi 最近表現如何\\nWindows 最近表現如何\\n比較 GAM 和 SA\\n比較 Windows 和 Pi\\n清理歷史紀錄\\n\\nHistory 不需要解析細節，只輸出 intent=history。\\n\\n【Detection】\\n只有當使用者明確要執行新的裂縫偵測時，intent=detection。\\n\\n例如：\\n開始偵測\\n執行偵測\\n裂縫偵測\\n檢測裂縫\\n推論圖片\\n快速偵測\\n高精度偵測\\n幫我快速偵測裂縫\\n幫我高精度偵測裂縫\\n\\n注意：\\n幫我快速偵測裂縫 → detection\\n快速偵測 → detection\\n最快速偵測的一次 → history\\n最快執行紀錄 → history\\n\\n【模型判斷】\\n快速\\n即時\\n速度優先\\n→ detect_hint=fast\\n→ model=SA\\n\\n高精度\\n高準確\\n精準\\n準確率優先\\n→ detect_hint=accurate\\n→ model=GAM\\n\\n未指定\\n→ detect_hint=default\\n→ model=GAM\\n\\n【設備判斷】\\n只有當使用者明確提到：\\nPi\\nPi5\\nRaspberry Pi\\n樹莓派\\n遠端\\nEdge\\n\\n才允許：\\ntarget_hint=pi\\n\\n若未提到上述關鍵字：\\ntarget_hint=windows\\n\\n重要：\\n快速偵測\\n高精度偵測\\n裂縫偵測\\n開始偵測\\n執行偵測\\n\\n若沒有提到 Pi、Pi5、Raspberry Pi、樹莓派、遠端、Edge\\n\\n必須輸出：\\ntarget_hint=windows\\n\\n【open_folder】\\n使用者想：\\n開啟結果\\n查看結果資料夾\\n下載結果\\n回傳結果\\n複製結果\\n取回結果\\n\\nintent=open_folder\\n\\nPi、Pi5、Raspberry Pi、樹莓派 → source=pi\\nWindows、Win、本機、電腦、桌機 → source=windows\\n未指定 → source=windows\\n\\n【輸出格式】\\nDetection：\\nintent\\n detect_hint\\n target_hint\\n model\\n\\nOpen Folder：\\nintent\\n source\\n\\nHistory：\\nintent\\n\\nExplain Term：\\nintent\\n term\\n\\nHelp：\\nintent\\n\\nOther：\\nintent\\n\\n使用者輸入：{{$json.chatInput}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1920,
+        224
+      ],
+      "id": "141dae0d-b64d-4ad2-99e5-06c3d1bc3dbe",
+      "name": "Intent Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b152efd8-eab7-4ca7-b301-f54f5528de7a",
+              "name": "reply",
+              "value": "={{\n\"YOLO-AMC Agent 目前支援以下功能：\\n\\n\" +\n\n\"1. 裂縫偵測\\n\" +\n\"   - 自動選擇 YOLO-AMC 模型\\n\" +\n\"   - SA：速度優先模式（Fast Detection）\\n\" +\n\"   - GAM：高精度模式（Accurate Detection）\\n\" +\n\"   - 支援 Windows 本機偵測與 Raspberry Pi 遠端偵測\\n\\n\" +\n\n\"2. Raspberry Pi 遠端偵測\\n\" +\n\"   - 透過 SSH 遠端執行 Raspberry Pi 裂縫偵測\\n\" +\n\"   - 支援 Edge Device Crack Detection\\n\" +\n\"   - 自動同步結果回 Windows\\n\\n\" +\n\n\"3. 結果管理\\n\" +\n\"   - 開啟 Windows 結果資料夾\\n\" +\n\"   - 開啟 Raspberry Pi 結果資料夾\\n\" +\n\"   - 回傳 Raspberry Pi 最新偵測結果\\n\\n\" +\n\n\"4. 名詞說明\\n\" +\n\"   - 信心值（Confidence）\\n\" +\n\"   - FPS（每秒影格數）\\n\" +\n\"   - 邊界框（Bounding Box）\\n\" +\n\"   - YOLO-AMC 架構\\n\" +\n\"   - GAM / SA 模型差異\\n\\n\" +\n\n\"5. 歷史偵測紀錄查詢（History Query）\\n\" +\n\"   - 查詢最近一次偵測結果\\n\" +\n\"   - 查詢最近 N 次偵測紀錄\\n\" +\n\"   - 查詢歷史統計\\n\" +\n\"   - 查詢最高平均信心值紀錄\\n\" +\n\"   - 查詢最快執行紀錄\\n\" +\n\"   - 清理已不存在的歷史紀錄\\n\\n\" +\n\n\"6. 歷史分析（History Analytics）\\n\" +\n\"   - 信心值趨勢分析\\n\" +\n\"   - 執行時間 / 速度趨勢分析\\n\" +\n\"   - 偵測框數趨勢分析\\n\" +\n\"   - 偵測到裂縫影像數趨勢分析\\n\" +\n\"   - GAM 與 SA 模型比較\\n\" +\n\"   - Windows 與 Raspberry Pi 比較\\n\\n\" +\n\n\"注意：\\n\" +\n\"目前系統不支援真正的效能、性能或效率分析。\\n\" +\n\"若要分析速度，請使用「速度分析」或「執行時間趨勢」。\\n\\n\" +\n\n\"範例指令：\\n\\n\" +\n\n\"裂縫偵測\\n\" +\n\"「幫我快速檢測裂縫」\\n\" +\n\"「幫我高精度檢測裂縫」\\n\" +\n\"「使用 Raspberry Pi 偵測裂縫」\\n\\n\" +\n\n\"結果管理\\n\" +\n\"「打開 Windows 結果資料夾」\\n\" +\n\"「打開 Raspberry Pi 結果資料夾」\\n\" +\n\"「回傳 Raspberry Pi 最新結果」\\n\\n\" +\n\n\"歷史查詢\\n\" +\n\"「顯示最近一次偵測結果」\\n\" +\n\"「顯示最近五次偵測紀錄」\\n\" +\n\"「Pi 最近五次紀錄」\\n\" +\n\"「哪次信心值最高？」\\n\" +\n\"「哪次執行最快？」\\n\" +\n\"「統計歷史偵測紀錄」\\n\" +\n\"「清理不存在的歷史紀錄」\\n\\n\" +\n\n\"歷史分析\\n\" +\n\"「Pi 最近信心值趨勢」\\n\" +\n\"「Windows 最近速度分析」\\n\" +\n\"「Pi 最近框數有增加嗎」\\n\" +\n\"「最近裂縫數量有增加嗎」\\n\" +\n\"「比較 GAM 和 SA 的信心值」\\n\" +\n\"「比較 Windows 與 Pi 的速度」\\n\\n\" +\n\n\"名詞說明\\n\" +\n\"「什麼是信心值？」\\n\" +\n\"「什麼是 FPS？」\\n\" +\n\"「GAM 和 SA 差在哪？」\\n\\n\" \n\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1248,
+        224
+      ],
+      "id": "deb66a7e-9601-4c12-ae37-f9054953585a",
+      "name": "System Help"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cc33105f-e712-4512-b2fa-30184f76a463",
+              "name": "reply",
+              "value": "={{ $json.term === \"confidence\" ? \"信心值（Confidence）代表模型對偵測結果的可信程度，數值越高表示模型越確定該區域為裂縫。\"\n\n: $json.term === \"fps\" ? \"FPS（Frames Per Second）代表每秒可處理的影像數量。FPS 越高表示推論速度越快，常用於比較 Windows 與 Raspberry Pi 的推論效率。\"\n\n: $json.term === \"bounding_box\" ? \"邊界框（Bounding Box）是物件偵測模型用來標示目標位置的矩形框，通常包含目標座標、類別與信心值。\"\n\n: $json.term === \"yolo_amc\" ? \"YOLO-AMC 是一種融合注意力機制的改良 YOLO 架構，用於建築物裂縫偵測，包含 GAM 與 SA 等架構，可部署於 Windows 與 Raspberry Pi 進行裂縫偵測。詳情請參閱 YOLO-AMC Github 專案頁面：https://github.com/CY-Tsai24/YOLO-AMC\"\n\n: $json.term === \"gam_sa\" ? \"GAM 著重提升特徵表達能力與偵測精度，適合高精度裂縫檢測。SA 結構較輕量，通常具有較快的推論速度，適合即時偵測與 Edge Device 部署。\"\n\n: \"目前尚未提供此名詞說明。\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1248,
+        416
+      ],
+      "id": "026be70b-1df7-496e-aeba-928b26c21ba6",
+      "name": "Knowledge Base"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a43515d9-f2e1-481e-ba1c-e25e25491840",
+              "name": "reply",
+              "value": "={{\n\"已開啟 YOLO-AMC 推論結果資料夾。\\n\\n\" +\n\"來源：\" + $json.source + \"\\n\\n\" +\n\"請參閱以下路徑：\\n\" +\n($json.local_dir || $json.output_dir || \"未提供\")\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1024,
+        64
+      ],
+      "id": "5152c55c-478a-494e-8ebe-0e4bbb323eba",
+      "name": "Operation Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86255cd0-38d5-4c4e-8320-0b7fecbae2cd",
+              "name": "=reply",
+              "value": "={{\n\"YOLO-AMC 裂縫偵測完成\\n\\n\" +\n\n\"狀態：\" + $node[\"Detection Service\"].json.status + \"\\n\" +\n\"模型：\" + $node[\"Detection Service\"].json.model + \"\\n\\n\" +\n\n\"總影像數：\" + $node[\"Detection Service\"].json.total_images + \"\\n\" +\n\"偵測到裂縫影像數：\" + $node[\"Detection Service\"].json.detected_images + \"\\n\" +\n\"總偵測框數：\" + $node[\"Detection Service\"].json.total_boxes + \"\\n\\n\" +\n\n\"平均信心值：\" + $node[\"Detection Service\"].json.avg_confidence + \"\\n\" +\n\"信心閾值：\" + $node[\"Detection Service\"].json.confidence_threshold + \"\\n\\n\" +\n\n\"執行時間：\" + $node[\"Detection Service\"].json.execution_time_sec + \" 秒\\n\\n\" +\n\n\"輸出資料夾：\\n\" +\n$node[\"Detection Service\"].json.output_dir\n}}",
+              "type": "string"
+            },
+            {
+              "id": "15a4e62c-8090-406b-b224-3f7c4bd6a263",
+              "name": "output_dir",
+              "value": "={{ $node[\"Detection Service\"].json.output_dir }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -48,
+        -272
+      ],
+      "id": "d3fb8c4f-2a15-4828-8b65-091f4ce35388",
+      "name": "Detection Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd513b7f-16be-42b1-ade0-9ad64925a17c",
+              "name": "intent",
+              "value": "={{\n(() => {\n  const r = JSON.parse($json.response);\n  return r.intent || \"other\";\n})()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "47d20d3e-595e-4890-9fc7-4d366f8c6aba",
+              "name": "term",
+              "value": "={{ JSON.parse($json.response).term || null }}",
+              "type": "string"
+            },
+            {
+              "id": "28a5d7b1-6c10-4c7d-9130-46da9c87e6fe",
+              "name": "detect_hint",
+              "value": "={{ JSON.parse($json.response).detect_hint || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "b5e823f2-193e-40e3-af1b-e631e110b4ad",
+              "name": "target_hint",
+              "value": "={{ JSON.parse($json.response).target_hint || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "e990d169-1246-4bb5-87dd-f50bc90d0fda",
+              "name": "source",
+              "value": "={{ JSON.parse($json.response).source || null }}",
+              "type": "string"
+            },
+            {
+              "id": "4104c94e-ae9f-4655-883a-ce764d6241bf",
+              "name": "chatInput",
+              "value": "={{ $('Webhook Parser').item.json.chatInput }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1696,
+        224
+      ],
+      "id": "24053649-3291-458a-8f9e-7d7b7b972fa8",
+      "name": "Intent Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "qwen3:4b"
+            },
+            {
+              "name": "prompt",
+              "value": "=={{\n{\n  \"model\": \"qwen3:4b\",\n  \"stream\": false,\n  \"prompt\": \n    \"你是 YOLO-AMC 建築裂縫檢測報告助理。\\n\\n\" +\n    \"狀態：\" + $json.status + \"\\n\" +\n    \"總影像數：\" + $json.total_images + \"\\n\" +\n    \"偵測到裂縫影像數：\" + $json.detected_images + \"\\n\" +\n    \"總偵測框數：\" + $json.total_boxes + \"\\n\" +\n    \"平均信心值：\" + $json.avg_confidence + \"\\n\" +\n    \"信心閾值：\" + $json.confidence_threshold + \"\\n\" +\n    \"輸出資料夾：\" + $json.output_dir + \"\\n\" +\n    \"執行時間：\" + $json.execution_time_sec + \" 秒\\n\\n\" +\n    \"請生成繁體中文檢測報告。\"\n}\n}}"
+            },
+            {
+              "name": "stream",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -272,
+        -272
+      ],
+      "id": "81d9bdcc-5648-4ec4-941c-37ad3cd8673b",
+      "name": "Report Generator"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5000/detect",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"{{$json.model}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -496,
+        -272
+      ],
+      "id": "f73c2bed-705d-47ea-8798-c0be70d1c9ab",
+      "name": "Detection Service"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5000/open_folder?source={{$json.source || \"windows\"}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1248,
+        64
+      ],
+      "id": "553733d8-89fe-483f-b557-60e8bd778f8d",
+      "name": "Folder Service"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen3:4b\",\n  \"stream\": false,\n  \"prompt\": \"你是 YOLO-AMC Detect Agent。\\n\\n你的任務是根據 Intent Agent 的輸出，決定裂縫偵測要使用哪個平台與模型。\\n\\n輸入欄位：\\n- intent：任務類型\\n- detect_hint：fast / accurate / default\\n- target_hint：windows / pi\\n\\n決策規則：\\n1. 若 target_hint = pi，選擇 Raspberry Pi 遠端偵測。\\n2. Raspberry Pi 偵測目前使用 GAM ONNX 模型，輸出 model = GAM，route = pi_detection。\\n3. 若 target_hint = windows 且 detect_hint = fast，選擇 SA，route = windows_detection。\\n4. 若 target_hint = windows 且 detect_hint = accurate，選擇 GAM，route = windows_detection。\\n5. 若 target_hint = windows 且 detect_hint = default，預設選擇 GAM，route = windows_detection。\\n\\n輸出格式：\\nWindows 快速偵測：{\\\"target\\\":\\\"windows\\\",\\\"mode\\\":\\\"fast\\\",\\\"model\\\":\\\"SA\\\",\\\"route\\\":\\\"windows_detection\\\"}\\nWindows 精準偵測：{\\\"target\\\":\\\"windows\\\",\\\"mode\\\":\\\"accurate\\\",\\\"model\\\":\\\"GAM\\\",\\\"route\\\":\\\"windows_detection\\\"}\\nRaspberry Pi 遠端偵測：{\\\"target\\\":\\\"pi\\\",\\\"mode\\\":\\\"edge\\\",\\\"model\\\":\\\"GAM\\\",\\\"route\\\":\\\"pi_detection\\\"}\\n\\n限制：\\n- 只能輸出 JSON\\n- 不要解釋\\n- 不要 markdown\\n- 不要換行\\n- 不要其他文字\\n\\nIntent Agent 輸出：\\nintent={{$json.intent}}\\ndetect_hint={{$json.detect_hint}}\\ntarget_hint={{$json.target_hint}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1248,
+        -160
+      ],
+      "id": "b3430e6d-5b5c-4427-b1bd-5eee521e8ed1",
+      "name": "Detect Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "612562f2-b2d4-445a-8054-c7aff89146de",
+              "name": "target",
+              "value": "={{JSON.parse($json.response).target || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "56e53b6d-cb30-4463-ab4d-139ddfc734d6",
+              "name": "mode",
+              "value": "={{JSON.parse($json.response).mode || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "7a4b4927-94cf-4392-8ead-800064a0c1b2",
+              "name": "model",
+              "value": "={{JSON.parse($json.response).model || \"\"}}",
+              "type": "string"
+            },
+            {
+              "id": "e84acc51-cef4-4594-b8e8-27130f963f91",
+              "name": "route",
+              "value": "={{JSON.parse($json.response).route || \"\"}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1024,
+        -160
+      ],
+      "id": "066f615e-af7f-4118-b8cc-696b6ac61391",
+      "name": "Detect Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.route}}",
+                    "rightValue": "windows_detection",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7e33f87f-ce9c-4962-995d-ea793e697978"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ebce98b6-0145-4454-b192-886d247094dc",
+                    "leftValue": "={{$json.route}}",
+                    "rightValue": "pi_detection",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -816,
+        -160
+      ],
+      "id": "9304026f-acf4-45ea-b064-8e1870d4470b",
+      "name": "Detection Router"
+    },
+    {
+      "parameters": {
+        "url": "http://host.docker.internal:5000/pi_sync",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -288,
+        -64
+      ],
+      "id": "722d8fdf-3241-4109-bdde-82d2ec341710",
+      "name": "Pi Sync Service"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8ba1846b-8447-4024-aaa1-eed97646e3ca",
+              "name": "reply",
+              "value": "=YOLO-AMC 樹莓派裂縫偵測完成\n\n狀態：{{$json.status}}\n設備：{{$json.device}}\n模型：{{$json.model}}\n\n總影像數：{{$json.total_images}}\n偵測到裂縫影像數：{{$json.detected_images}}\n總偵測框數：{{$json.total_boxes}}\n\n平均信心值：{{$json.avg_confidence}}\n信心閾值：{{$json.confidence_threshold}}\n\n執行時間：{{$json.execution_time_sec}} 秒\n\nPi 結果資料夾：\n{{$json.remote_output_dir}}\n\nWindows 結果資料夾：\n{{$json.output_dir}}\n\nSummary：\n{{$json.summary_path}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        -64
+      ],
+      "id": "c85ae67c-dd70-4fc9-a53d-16892968ae2c",
+      "name": "Pi Sync Response"
+    },
+    {
+      "parameters": {
+        "url": "={{\n\"http://host.docker.internal:5000/history/analyze\"\n+ \"?type=\" + ($json.query_type || \"trend\")\n+ \"&source=\" + ($json.source || \"all\")\n+ \"&limit=\" + ($json.limit || 5)\n+ ($json.model && $json.model !== \"all\" ? \"&model=\" + $json.model : \"\")\n+ ($json.metric ? \"&metric=\" + $json.metric : \"\")\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -576,
+        704
+      ],
+      "id": "77aec16f-a9b1-4823-8cdb-c0aa9cae1ad0",
+      "name": "History Analytics"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"qwen3:4b\",\n  \"stream\": false,\n  \"think\": false,\n  \"format\": \"json\",\n  \"prompt\": \"你是 YOLO-AMC History Agent。\\n\\n只能輸出 JSON。\\n禁止解釋。\\n禁止分析。\\n禁止任何額外文字。\\n\\n永遠輸出以下格式：\\n{\\\"history_mode\\\":\\\"\\\",\\\"query_type\\\":\\\"\\\",\\\"model\\\":\\\"\\\",\\\"metric\\\":\\\"\\\",\\\"source\\\":\\\"\\\",\\\"limit\\\":0}\\n\\n允許值：\\nhistory_mode：query、analytics、unsupported\\nquery_type：latest、recent、stats、best_confidence、fastest、clean、trend、compare_models、unsupported\\nmetric：avg_confidence、execution_time_sec、total_boxes、detected_images、unsupported\\nsource：all、windows、pi\\nmodel：all、GAM、SA\\n\\n【最高優先級：GAM 與 SA 比較】\\n只要使用者同時提到 GAM 與 SA，不論中間有沒有空格、和、與、跟、vs、VS，並且有比較、差異、對比、哪個好、表現、分析等語意，一律輸出：\\n{\\\"history_mode\\\":\\\"analytics\\\",\\\"query_type\\\":\\\"compare_models\\\",\\\"model\\\":\\\"all\\\",\\\"metric\\\":\\\"avg_confidence\\\",\\\"source\\\":\\\"all\\\",\\\"limit\\\":10}\\n\\n範例：\\nGAM SA比較\\nGAM和SA比較\\nGAM 與 SA 差異\\nSA GAM 對比\\nGAM vs SA\\nGAM跟SA哪個好\\n\\n【不支援規則】\\n若使用者只提到：效能、性能、效率、效能分析、性能分析、效率分析，且沒有明確提到速度、耗時、執行時間、FPS，則輸出：\\n{\\\"history_mode\\\":\\\"unsupported\\\",\\\"query_type\\\":\\\"unsupported\\\",\\\"model\\\":\\\"all\\\",\\\"metric\\\":\\\"unsupported\\\",\\\"source\\\":\\\"all\\\",\\\"limit\\\":5}\\n\\n注意：效能 ≠ 執行時間，性能 ≠ 執行時間，效率 ≠ 執行時間。\\n\\n【history_mode 判斷】\\n\\n【最高優先級：History Query】\\n若使用者提到：\\n最近幾次、最近3次、最近三次、最近5次、最近五次、最近10次、最近十次、\\n最近一次、最新一次、上一次、\\n歷史紀錄、偵測紀錄、查看歷史、查詢歷史、顯示歷史\\n\\n且沒有提到：\\n分析、趨勢、比較、差異、對比、vs、VS、變化、增加、下降、成長、衰退、如何、表現\\n\\n一律輸出：\\nhistory_mode=query。\\n\\n【History Analytics】\\n若提到：\\n趨勢、分析、比較、差異、對比、vs、VS、變化、增加、下降、成長、衰退、如何、\\n模型表現、設備表現、\\n速度分析、信心值分析、框數分析\\n\\n則輸出：\\nhistory_mode=analytics。\\n\\n否則：\\nhistory_mode=query。\\n\\n【query_type 判斷】\\n\\n若提到模型比較、GAM SA、GAM和SA、GAM與SA、GAM跟SA、GAM vs SA、\\nSA GAM、SA和GAM、SA與GAM、SA跟GAM、SA vs GAM\\n→ compare_models。\\n\\n若提到設備比較、Windows 和 Pi、Windows 與 Pi、Windows vs Pi、\\nPi 和 Windows、Pi 與 Windows、Pi vs Windows\\n→ compare_models。\\n\\n若 history_mode=analytics，且使用者提到：\\n最近幾次、最近3次、最近三次、\\n最近5次、最近五次、\\n最近10次、最近十次、\\n歷史紀錄、偵測紀錄\\n→ trend。\\n\\n若 history_mode=analytics 且不是 compare_models\\n→ trend。\\n\\n若提到：\\n最近一次、最新一次、上一次\\n→ latest。\\n\\n若提到：\\n最近幾次、最近3次、最近三次、\\n最近5次、最近五次、\\n最近10次、最近十次、\\n歷史紀錄、偵測紀錄、\\n查看歷史、查詢歷史、顯示歷史\\n→ recent。\\n\\n若提到：\\n統計、總共偵測幾次、歷史統計\\n→ stats。\\n\\n若提到：\\n最高信心值、信心值最高、哪次信心值最高、最高平均信心值\\n→ best_confidence。\\n\\n若提到：\\n最快、耗時最短、執行時間最短\\n→ fastest。\\n\\n若提到：\\n清理、刪除歷史紀錄\\n→ clean。\\n\\n重要限制：\\n如果使用者只問最近信心值如何、信心值趨勢、信心值分析、最近表現如何，不得輸出 best_confidence，必須輸出 query_type=trend。\\n若 query_type=trend 或 compare_models，history_mode 必須為 analytics。\\n若 query_type=unsupported，history_mode 必須為 unsupported。\\n若 history_mode=query，query_type 只能是 latest、recent、stats、best_confidence、fastest、clean。\\n若 history_mode=analytics，query_type 只能是 trend、compare_models。\\n\\n【metric 判斷】\\n信心值、confidence、可信度、平均信心值、模型表現、表現如何、信心值分析、最近信心值 → avg_confidence。\\n速度、耗時、執行時間、FPS、速度分析、快不快、最近速度 → execution_time_sec。\\n框數、偵測框、bounding box、box、框數分析、最近框數 → total_boxes。\\n裂縫數量、偵測數量、偵測到裂縫影像數、最近裂縫數量、最近偵測數量 → detected_images。\\n未指定 → avg_confidence。\\n\\n【source 判斷】\\nWindows、Win、電腦、桌機、本機 → windows。\\nPi、Pi5、Raspberry Pi、樹莓派 → pi。\\n同時提到 Windows/Win/電腦/桌機/本機 與 Pi/Pi5/Raspberry Pi/樹莓派 → all。\\n未指定 → all。\\n禁止輸出 unsupported 作為 source。\\n\\n【model 判斷】\\n只提到 GAM → GAM。\\n只提到 SA → SA。\\n同時提到 GAM 與 SA → all。\\n未指定 → all。\\n禁止輸出 unsupported 作為 model。\\n\\n【limit 判斷】\\n最近3次、最近三次 → 3。\\n最近5次、最近五次 → 5。\\n最近10次、最近十次 → 10。\\ncompare_models → 10。\\ntrend → 5。\\n其他 → 5。\\n\\n使用者輸入：{{$json.chatInput}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1248,
+        608
+      ],
+      "id": "fba73e3d-eeb0-43e8-aa4f-6596e85e5e2a",
+      "name": "History Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0517cd56-6a29-4b1e-b8e5-ed2aa815913e",
+              "name": "history_mode",
+              "value": "={{ JSON.parse($json.response).history_mode }}",
+              "type": "string"
+            },
+            {
+              "id": "748b0623-3860-4e67-9c2d-18f7cc8411b5",
+              "name": "chatInput",
+              "value": "={{ $('Intent Parser').item.json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "0927bc11-4f24-4b5d-bff3-cbedb570c8ce",
+              "name": "query_type",
+              "value": "={{ JSON.parse($json.response).query_type || 'trend' }}",
+              "type": "string"
+            },
+            {
+              "id": "24c65b8e-0875-405a-b8d4-fa0483fd5fa6",
+              "name": "metric",
+              "value": "={{ JSON.parse($json.response).metric || 'avg_confidence' }}",
+              "type": "string"
+            },
+            {
+              "id": "89a4af09-b57d-4453-a458-2d18bfe80e1a",
+              "name": "limit",
+              "value": "={{ JSON.parse($json.response).limit || 5 }}",
+              "type": "string"
+            },
+            {
+              "id": "661c1148-1547-4a36-91c9-96e756ee7739",
+              "name": "model",
+              "value": "={{ JSON.parse($json.response).model || 'all' }}",
+              "type": "string"
+            },
+            {
+              "id": "89714929-0337-4fdd-a1a5-07e3b95ca45e",
+              "name": "source",
+              "value": "={{ JSON.parse($json.response).source || 'all' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1024,
+        608
+      ],
+      "id": "b4bcac97-487f-4b48-879f-7e2155be3479",
+      "name": "History Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ ['latest','recent','stats','best_confidence','fastest','clean'].includes($json.query_type) }}",
+                    "rightValue": "=query",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "7301aeec-53ff-4f56-ba62-7627248e6a84"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "19509f92-9215-4158-ae36-24f5b987e67f",
+                    "leftValue": "={{ ['trend','compare_models'].includes($json.query_type) }}",
+                    "rightValue": "analytics",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -800,
+        608
+      ],
+      "id": "b5937019-1d82-45be-982e-574b38d0847f",
+      "name": "History Router"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.intent}}",
+                    "rightValue": "detection",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "86588b48-b440-4159-b707-904a67ca9d44"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "222ff2eb-9af4-492f-b469-f639677c3dfb",
+                    "leftValue": "={{$json.intent}}",
+                    "rightValue": "open_folder",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "750053b4-8241-4390-b537-f5db1bcc8ef4",
+                    "leftValue": "={{$json.intent}}",
+                    "rightValue": "help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ba8dc659-8bf2-4a6b-88e0-ec2a33593de8",
+                    "leftValue": "={{$json.intent}}",
+                    "rightValue": "explain_term",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c9bd8c00-df57-4002-b651-2ea73c905e74",
+                    "leftValue": "={{$json.intent}}",
+                    "rightValue": "history",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1472,
+        176
+      ],
+      "id": "0a9c6e4e-eaca-4776-ba70-db6c2a2987ce",
+      "name": "Intent Router"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nconst metricMap = {\n  avg_confidence: \"平均信心值\",\n  execution_time_sec: \"執行時間\",\n  total_boxes: \"偵測框數\",\n  detected_images: \"偵測到裂縫的影像數\"\n};\n\nconst sourceMap = {\n  all: \"全部來源\",\n  windows: \"Windows\",\n  pi: \"Raspberry Pi 5\"\n};\n\nconst typeMap = {\n  trend: \"趨勢分析\",\n  compare_models: \"模型比較\"\n};\n\nfunction fmtNum(value, digits = 4) {\n  if (value === undefined || value === null || value === \"\") return \"未提供\";\n  const n = Number(value);\n  return Number.isFinite(n) ? n.toFixed(digits) : String(value);\n}\n\n// ============================================================\n// Compare Models Formatter\n// ============================================================\nif (data.query_type === \"compare_models\") {\n  const models = data.models || {};\n  const gam = models.GAM || null;\n  const sa = models.SA || null;\n\n  let reply = \"歷史分析結果\\n\\n\";\n\n  reply += \"分析類型：模型比較\\n\\n\";\n  reply += `來源：${sourceMap[data.source] || data.source || \"全部來源\"}\\n\\n`;\n  reply += `比較模型：GAM vs SA\\n\\n`;\n  reply += `指標：${metricMap[data.metric] || data.metric || \"平均信心值\"}\\n\\n`;\n\n  if (gam) {\n    reply += \"GAM：\\n\";\n    reply += `平均信心值：${fmtNum(gam.avg_confidence)}\\n`;\n    reply += `平均執行時間：${fmtNum(gam.avg_execution_time_sec)} 秒\\n`;\n    reply += `平均偵測框數：${fmtNum(gam.avg_total_boxes)}\\n`;\n    reply += `總偵測次數：${gam.total_runs ?? \"未提供\"}\\n`;\n    reply += `總影像數：${gam.total_images ?? \"未提供\"}\\n`;\n    reply += `總偵測框數：${gam.total_boxes ?? \"未提供\"}\\n\\n`;\n  } else {\n    reply += \"GAM：目前沒有可用紀錄\\n\\n\";\n  }\n\n  if (sa) {\n    reply += \"SA：\\n\";\n    reply += `平均信心值：${fmtNum(sa.avg_confidence)}\\n`;\n    reply += `平均執行時間：${fmtNum(sa.avg_execution_time_sec)} 秒\\n`;\n    reply += `平均偵測框數：${fmtNum(sa.avg_total_boxes)}\\n`;\n    reply += `總偵測次數：${sa.total_runs ?? \"未提供\"}\\n`;\n    reply += `總影像數：${sa.total_images ?? \"未提供\"}\\n`;\n    reply += `總偵測框數：${sa.total_boxes ?? \"未提供\"}\\n\\n`;\n  } else {\n    reply += \"SA：目前沒有可用紀錄\\n\\n\";\n  }\n\n  reply += \"比較結論：\\n\";\n\n  if (gam && sa) {\n    if (gam.avg_confidence > sa.avg_confidence) {\n      reply += \"GAM 的平均信心值較高。\\n\";\n    } else if (gam.avg_confidence < sa.avg_confidence) {\n      reply += \"SA 的平均信心值較高。\\n\";\n    } else {\n      reply += \"GAM 與 SA 的平均信心值接近。\\n\";\n    }\n\n    if (gam.avg_execution_time_sec > sa.avg_execution_time_sec) {\n      reply += \"SA 的平均執行時間較短，速度較快。\\n\";\n    } else if (gam.avg_execution_time_sec < sa.avg_execution_time_sec) {\n      reply += \"GAM 的平均執行時間較短，速度較快。\\n\";\n    } else {\n      reply += \"GAM 與 SA 的平均執行時間接近。\\n\";\n    }\n  } else {\n    reply += \"目前 GAM 或 SA 的歷史紀錄不足，暫時無法完整比較。\\n\";\n  }\n\n  return [\n    {\n      json: {\n        reply\n      }\n    }\n  ];\n}\n\n// ============================================================\n// Trend Formatter\n// ============================================================\n\nfunction formatTimestamp(ts) {\n  if (!ts) return \"未提供\";\n\n  const s = String(ts);\n\n  if (/^\\d{8}_\\d{6}$/.test(s)) {\n    return (\n      s.substring(0, 4) + \"-\" +\n      s.substring(4, 6) + \"-\" +\n      s.substring(6, 8) + \" \" +\n      s.substring(9, 11) + \":\" +\n      s.substring(11, 13) + \":\" +\n      s.substring(13, 15)\n    );\n  }\n\n  if (s.includes(\"T\")) {\n    return s.replace(\"T\", \" \").substring(0, 19);\n  }\n\n  return s;\n}\n\nfunction getMetricValue(record, metric) {\n  if (!record) return null;\n\n  if (record[metric] !== undefined) {\n    return record[metric];\n  }\n\n  if (metric === \"execution_time_sec\") {\n    return record.execution_time_sec ?? record.flask_execution_time_sec ?? null;\n  }\n\n  return null;\n}\n\nfunction getTime(record) {\n  return (\n    record?.timestamp ||\n    record?.created_at ||\n    record?.time ||\n    record?.datetime ||\n    \"未提供\"\n  );\n}\n\nlet reply = \"歷史分析結果\\n\\n\";\n\nreply += `分析類型：${typeMap[data.query_type] || data.query_type || data.type || \"未提供\"}\\n\\n`;\nreply += `來源：${sourceMap[data.source] || data.source || \"全部來源\"}\\n\\n`;\nreply += `模型：${data.model || \"all\"}\\n\\n`;\nreply += `指標：${metricMap[data.metric] || data.metric || \"未提供\"}\\n\\n`;\nreply += `資料筆數：${data.count || 0}\\n\\n`;\n\nif (Array.isArray(data.trend_points) && data.trend_points.length > 0) {\n  reply += `最近 ${data.trend_points.length} 筆紀錄：\\n\\n`;\n\n  data.trend_points.forEach((point, index) => {\n    const record = point.record || point;\n    const value = getMetricValue(record, data.metric);\n\n    reply += `${index + 1}.\\n`;\n    reply += `時間：${formatTimestamp(getTime(record))}\\n`;\n    reply += `設備：${point.device || record.device || \"未提供\"}\\n`;\n    reply += `模型：${point.model || record.model || data.model || \"未提供\"}\\n`;\n    reply += `${metricMap[data.metric] || data.metric || \"指標值\"}：${fmtNum(value)}\\n\\n`;\n  });\n}\n\nreply += \"趨勢分析：\\n\\n\";\n\nif (data.avg_value !== undefined) {\n  reply += `平均值：${fmtNum(data.avg_value)}\\n\\n`;\n}\n\nif (data.max_value !== undefined) {\n  reply += `最高值：${fmtNum(data.max_value)}\\n\\n`;\n}\n\nif (data.min_value !== undefined) {\n  reply += `最低值：${fmtNum(data.min_value)}\\n\\n`;\n}\n\nif (data.first_value !== undefined) {\n  reply += `起始值：${fmtNum(data.first_value)}\\n\\n`;\n}\n\nif (data.last_value !== undefined) {\n  reply += `最新值：${fmtNum(data.last_value)}\\n\\n`;\n}\n\nif (data.delta !== undefined) {\n  reply += `變化量：${fmtNum(data.delta)}\\n\\n`;\n}\n\nif (data.change_percent !== undefined) {\n  reply += `變化百分比：${fmtNum(data.change_percent, 2)}%\\n\\n`;\n}\n\nif (data.direction) {\n  let trendText = \"持平\";\n\n  if (data.direction === \"up\") {\n    trendText = \"上升\";\n  } else if (data.direction === \"down\") {\n    trendText = \"下降\";\n  } else if (data.direction === \"stable\") {\n    trendText = \"穩定\";\n  }\n\n  reply += `趨勢判斷：${trendText}\\n\\n`;\n}\n\nif (data.summary) {\n  reply += `摘要：${data.summary}\\n\\n`;\n}\n\nreturn [\n  {\n    json: {\n      reply\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        704
+      ],
+      "id": "43bbb8cd-0ea4-4db7-ad4e-f504435e089e",
+      "name": "History Analytics Formatter"
+    },
+    {
+      "parameters": {
+        "url": "={{\n(() => {\n\n  const q = $json.query_type;\n  const source = $json.source || \"all\";\n  const limit = $json.limit || 5;\n\n  const base = \"http://host.docker.internal:5000\";\n\n  if (q === \"latest\") {\n    return `${base}/history/latest?source=${source}`;\n  }\n\n  if (q === \"recent\") {\n    return `${base}/history/recent?source=${source}&limit=${limit}`;\n  }\n\n  if (q === \"stats\") {\n    return `${base}/history/stats?source=${source}`;\n  }\n\n  if (q === \"best_confidence\") {\n    return `${base}/history/best-confidence?source=${source}`;\n  }\n\n  if (q === \"fastest\") {\n    return `${base}/history/fastest?source=${source}`;\n  }\n\n  if (q === \"clean\") {\n    return `${base}/history/clean?source=${source}`;\n  }\n\n  throw new Error(`Unsupported query_type: ${q}`);\n\n})()\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -576,
+        528
+      ],
+      "id": "412fa33d-c59a-4a05-9f28-04f56ff3b731",
+      "name": "History Query"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\n\nfunction formatTime(ts) {\n  if (!ts) return \"未提供\";\n\n  const s = String(ts);\n\n  if (s.length === 15 && s.includes(\"_\")) {\n    const year = s.slice(0, 4);\n    const month = s.slice(4, 6);\n    const day = s.slice(6, 8);\n    const hour = s.slice(9, 11);\n    const min = s.slice(11, 13);\n    const sec = s.slice(13, 15);\n\n    return `${year}-${month}-${day} ${hour}:${min}:${sec}`;\n  }\n\n  return s;\n}\n\nfunction getRecord() {\n  if (Array.isArray(data.records) && data.records.length > 0) {\n    return data.records[0];\n  }\n  return null;\n}\n\nfunction formatRecord(title, r) {\n  if (!r) return `${title}\\n\\n查無歷史紀錄。`;\n\n  return (\n    `${title}\\n\\n` +\n    `偵測時間：${formatTime(r.timestamp)}\\n` +\n    `設備：${r.device || r.source || \"未提供\"}\\n` +\n    `模型：${r.model || \"未提供\"}\\n` +\n    `平均信心值：${r.avg_confidence ?? \"未提供\"}\\n` +\n    `總影像數：${r.total_images ?? \"未提供\"}\\n` +\n    `偵測到裂縫影像數：${r.detected_images ?? \"未提供\"}\\n` +\n    `總偵測框數：${r.total_boxes ?? \"未提供\"}\\n` +\n    `執行時間：${r.execution_time_sec ?? \"未提供\"} 秒`\n  );\n}\n\nlet reply = \"\";\n\nif (data.query_type === \"latest\") {\n  reply = formatRecord(\"最近一次偵測紀錄\", getRecord());\n}\n\nelse if (data.query_type === \"recent\") {\n  const records = Array.isArray(data.records) ? data.records : [];\n  const count = data.count ?? records.length;\n\n  if (records.length === 0) {\n    reply = \"最近偵測紀錄\\n\\n查無歷史紀錄。\";\n  } else {\n    reply = `最近 ${count} 次偵測紀錄\\n\\n`;\n\n    records.forEach((r, i) => {\n      reply +=\n        `${i + 1}. 偵測時間：${formatTime(r.timestamp)}\\n` +\n        `設備：${r.device || r.source || \"未提供\"}\\n` +\n        `模型：${r.model || \"未提供\"}\\n` +\n        `平均信心值：${r.avg_confidence ?? \"未提供\"}\\n` +\n        `總影像數：${r.total_images ?? \"未提供\"}\\n` +\n        `偵測到裂縫影像數：${r.detected_images ?? \"未提供\"}\\n` +\n        `總偵測框數：${r.total_boxes ?? \"未提供\"}\\n` +\n        `執行時間：${r.execution_time_sec ?? \"未提供\"} 秒\\n\\n`;\n    });\n\n    reply = reply.trim();\n  }\n}\n\nelse if (data.query_type === \"stats\") {\n  const deviceCount = data.device_count || {};\n  const modelCount = data.model_count || {};\n\n  reply =\n    \"歷史統計\\n\\n\" +\n    `平均信心值：${data.avg_confidence_overall ?? \"未提供\"}\\n` +\n    `平均執行時間：${data.avg_execution_time_sec ?? \"未提供\"} 秒\\n\\n` +\n    \"設備統計\\n\" +\n    `Windows：${deviceCount.Windows ?? 0}\\n` +\n    `Raspberry Pi 5：${deviceCount[\"Raspberry Pi 5\"] ?? 0}\\n` +\n    `Unknown：${deviceCount.unknown ?? 0}\\n\\n` +\n    \"模型統計\\n\" +\n    `GAM：${modelCount.GAM ?? 0}\\n` +\n    `SA：${modelCount.SA ?? 0}`;\n}\n\nelse if (data.query_type === \"best_confidence\") {\n  reply = formatRecord(\"最高信心值紀錄\", getRecord());\n}\n\nelse if (data.query_type === \"fastest\") {\n  reply = formatRecord(\"最快執行紀錄\", getRecord());\n}\n\nelse if (data.query_type === \"clean\" || data.query_type === \"clean_history\") {\n  reply =\n    \"歷史紀錄清理完成\\n\\n\" +\n    `清理前紀錄數：${data.before_count ?? \"未提供\"}\\n` +\n    `清理後紀錄數：${data.after_count ?? \"未提供\"}\\n` +\n    `移除紀錄數：${data.removed_count ?? \"未提供\"}`;\n}\n\nelse {\n  reply = \"無法辨識的歷史查詢類型。\";\n}\n\nreturn [\n  {\n    json: {\n      reply\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        528
+      ],
+      "id": "7e0ff24c-82a0-426d-bfed-c1978fb36420",
+      "name": "History Query Formatter"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "yoloamc",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2320,
+        224
+      ],
+      "id": "49024a4d-965d-4878-b892-0f62d1af25e2",
+      "name": "Webhook",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86411930-688f-4bf7-907e-17d292efda86",
+              "name": "chatInput",
+              "value": "={{$json.body.chatInput}}",
+              "type": "string"
+            },
+            {
+              "id": "e3249c46-7375-402c-a556-0e6e13aaaeec",
+              "name": "image_path",
+              "value": "={{$json.body.image_path}}",
+              "type": "string"
+            },
+            {
+              "id": "ad7d763e-d055-4270-afdc-0af5a2136fdd",
+              "name": "image_paths",
+              "value": "={{$json.body.image_paths}}",
+              "type": "string"
+            },
+            {
+              "id": "5a2edac7-6917-495d-a6a7-f83f67cad719",
+              "name": "image_dir",
+              "value": "={{$json.body.image_dir}}",
+              "type": "string"
+            },
+            {
+              "id": "8819432f-dd44-4898-ac00-09f2ba524eec",
+              "name": "batch_mode",
+              "value": "={{$json.body.batch_mode}}",
+              "type": "string"
+            },
+            {
+              "id": "2f80e178-bab9-4589-935d-1c53dd252189",
+              "name": "total_images",
+              "value": "={{$json.body.total_images}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2112,
+        224
+      ],
+      "id": "178cc90c-a5af-4eae-9a4b-3bbee34c6200",
+      "name": "Webhook Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        -272
+      ],
+      "id": "c897ef14-a030-41bd-b921-49b30503793e",
+      "name": "Detection Webhook Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        -64
+      ],
+      "id": "f1114319-bb92-4679-9c7a-e338a7b9eec9",
+      "name": "PI Sync Webhook Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -816,
+        64
+      ],
+      "id": "ae7d1581-5eec-4867-af0c-1a8f92b44915",
+      "name": "Folder Webhook Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1040,
+        224
+      ],
+      "id": "f56445fa-c977-4583-a9ef-b56c54dfe01a",
+      "name": "Help Webhook Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1040,
+        416
+      ],
+      "id": "696a2695-e16d-4527-a7b8-84fca36b0a25",
+      "name": "Knowledge Webhook Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -144,
+        528
+      ],
+      "id": "bfc19a5f-9f1b-4877-b3bc-2028a4c44b28",
+      "name": "History Query Webhook Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -144,
+        704
+      ],
+      "id": "80c6e39c-7887-49bb-af88-524394caa7d4",
+      "name": "History Analytics Webhook Response1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:5000/pi_detect",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_paths",
+              "value": "={{$node[\"Webhook\"].json.body.image_paths}}"
+            },
+            {
+              "name": "image_dir",
+              "value": "={{$node[\"Webhook\"].json.body.image_dir}}"
+            },
+            {
+              "name": "batch_mode",
+              "value": "true"
+            },
+            {
+              "name": "model",
+              "value": "={{$json.model || \"GAM\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -496,
+        -64
+      ],
+      "id": "1bb0f283-bb40-4400-979e-6500aa3ac03a",
+      "name": "Pi Execution Service"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Intent Agent": {
+      "main": [
+        [
+          {
+            "node": "Intent Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "System Help": {
+      "main": [
+        [
+          {
+            "node": "Help Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge Base": {
+      "main": [
+        [
+          {
+            "node": "Knowledge Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Operation Response": {
+      "main": [
+        [
+          {
+            "node": "Folder Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detection Response": {
+      "main": [
+        [
+          {
+            "node": "Detection Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Parser": {
+      "main": [
+        [
+          {
+            "node": "Intent Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Generator": {
+      "main": [
+        [
+          {
+            "node": "Detection Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detection Service": {
+      "main": [
+        [
+          {
+            "node": "Report Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Folder Service": {
+      "main": [
+        [
+          {
+            "node": "Operation Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Agent": {
+      "main": [
+        [
+          {
+            "node": "Detect Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Parser": {
+      "main": [
+        [
+          {
+            "node": "Detection Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detection Router": {
+      "main": [
+        [
+          {
+            "node": "Detection Service",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Pi Execution Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pi Sync Service": {
+      "main": [
+        [
+          {
+            "node": "Pi Sync Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pi Sync Response": {
+      "main": [
+        [
+          {
+            "node": "PI Sync Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Analytics": {
+      "main": [
+        [
+          {
+            "node": "History Analytics Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Agent": {
+      "main": [
+        [
+          {
+            "node": "History Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Parser": {
+      "main": [
+        [
+          {
+            "node": "History Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Router": {
+      "main": [
+        [
+          {
+            "node": "History Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "History Analytics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Router": {
+      "main": [
+        [
+          {
+            "node": "Detect Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Folder Service",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "System Help",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Knowledge Base",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "History Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Analytics Formatter": {
+      "main": [
+        [
+          {
+            "node": "History Analytics Webhook Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Query": {
+      "main": [
+        [
+          {
+            "node": "History Query Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "History Query Formatter": {
+      "main": [
+        [
+          {
+            "node": "History Query Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Webhook Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Parser": {
+      "main": [
+        [
+          {
+            "node": "Intent Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Folder Webhook Response": {
+      "main": [
+        []
+      ]
+    },
+    "Help Webhook Response": {
+      "main": [
+        []
+      ]
+    },
+    "Pi Execution Service": {
+      "main": [
+        [
+          {
+            "node": "Pi Sync Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}

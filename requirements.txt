@@ -1,0 +1,9 @@
+Flask
+streamlit==1.45.1
+requests==2.32.3
+Pillow==11.0.0
+opencv-python==4.11.0.86
+ultralytics==8.3.113
+torch==2.5.1
+torchvision==0.20.1
+numpy==2.0.1
