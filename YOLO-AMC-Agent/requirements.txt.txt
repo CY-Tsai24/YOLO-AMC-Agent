@@ -1,4 +1,0 @@
-flask==3.1.0
-ultralytics==8.3.113
-opencv-python==4.11.0.86
-torch==2.5.1
