@@ -1,145 +1,267 @@
-# YOLO-AMC Agent
+# YOLO-AMC Inspection Platform
 
-Multi-Agent Crack Inspection Assistant powered by YOLO-AMC, Raspberry Pi Edge Deployment, and Historical Analytics.
+AI-powered crack inspection platform featuring **Streamlit**, **n8n Multi-Agent System**, **YOLO-AMC**, **Raspberry Pi Edge Deployment**, and **Historical Analytics**.
 
-## Overview
-
-YOLO-AMC Agent is a multi-agent system designed for building crack inspection.
-
-The system combines:
-
-* Natural Language Interface
-* YOLO-AMC Crack Detection
-* Raspberry Pi Edge Deployment
-* Historical Query System
-* Historical Analytics
-* Knowledge Assistant
-
-Users can interact with the system using natural language commands without manually selecting models, devices, or workflows.
+<p align="center">
+  <img src="images/Title.jpg" width="1000">
+</p>
 
 ---
 
-## System Architecture
+# Demo
+
+## Windows Detection + Trend Analysis
+
+![](video/Windows%20Detection%2BTrend%20Analysis.gif)
+
+---
+
+## Raspberry Pi Detection + History Query
+
+![](video/Raspberry%20Pi%20Detection%2BHistory%20Query.gif)
+
+---
+
+# Highlights
+
+- Streamlit-based Web Interface
+- Natural Language Interface
+- n8n-based Multi-Agent System
+- Automatic YOLO-AMC Model Selection
+- Windows Local Crack Detection
+- Raspberry Pi 5 Edge Deployment
+- SSH Remote Execution
+- SCP Automatic Result Synchronization
+- Batch Image Upload
+- Detection Result Viewer
+- Detection History Query
+- Historical Trend Analysis
+
+---
+
+# Overview
+
+YOLO-AMC Inspection Platform is an AI-powered crack inspection platform that integrates a Streamlit web interface, an n8n multi-agent system, YOLO-AMC detection models, Raspberry Pi edge deployment, and historical analytics into a unified inspection workflow.
+
+Users can upload one or multiple crack images and interact with the system using natural language commands. The platform automatically routes user requests, selects the appropriate detection model, performs inference on either Windows or Raspberry Pi, synchronizes detection results, and provides historical analysis without requiring manual workflow selection.
+
+---
+
+# Key Components
+
+| Component | Description |
+|-----------|-------------|
+| Streamlit | Web User Interface |
+| n8n | Multi-Agent System |
+| YOLO-AMC | Crack Detection |
+| Flask API | Detection Service |
+| Raspberry Pi 5 | Edge Inference |
+| Ollama + Qwen3 | Natural Language Understanding |
+| History Analytics | Detection Trend Analysis |
+
+---
+
+# Features
+
+## Streamlit Web Interface
+
+- Natural language interaction
+- Multi-image upload
+- Batch crack detection
+- Detection Result Viewer
+- Previous / Next image navigation
+- Original / Detection image switching
+- Automatic result matching
+
+---
+
+## Multi-Agent System
+
+- Intent Agent
+- Detect Agent
+- History Agent
+- Detection Router
+- History Router
+
+---
+
+## Crack Detection
+
+- Automatic model selection
+- GAM (High Accuracy)
+- SA (Fast Detection)
+- Windows local inference
+- Raspberry Pi 5 edge inference
+
+---
+
+## Raspberry Pi Edge Deployment
+
+- SSH remote execution
+- SCP automatic synchronization
+- ONNX Runtime inference
+- Automatic synchronization back to Windows
+
+---
+
+## History Query
+
+- Latest detection record
+- Recent N detection records
+- Detection statistics
+- Best confidence record
+- Fastest execution record
+- History cleanup
+
+---
+
+## History Analytics
+
+- Confidence trend analysis
+- Execution time trend analysis
+- Detection box trend analysis
+- Crack image trend analysis
+- GAM vs SA comparison
+- Windows vs Raspberry Pi comparison
+
+---
+
+## Knowledge Assistant
+
+Explain common object detection concepts, including:
+
+- Confidence
+- Bounding Box
+- YOLO-AMC
+- GAM vs SA
+
+---
+
+# System Architecture
 
 ```mermaid
 flowchart TD
 
 A[User]
 
-A --> B[Intent Agent]
+A --> B[Streamlit UI]
 
-B --> C[Detection Workflow]
-B --> D[History Workflow]
-B --> E[Knowledge Assistant]
-B --> F[Folder Service]
+B --> C[n8n Webhook]
 
-C --> G[Detect Agent]
+C --> D[Intent Agent]
 
-G --> H[Windows Detection]
-G --> I[Raspberry Pi Detection]
+D --> E{Intent Router}
 
-H --> J[SA Model]
-H --> K[GAM Model]
+E --> F[Detect Agent]
+E --> G[History Agent]
 
-I --> L[SSH Remote Execution]
-L --> M[ONNX Inference]
-M --> N[Result Synchronization]
+F --> H{Detection Router}
 
-D --> O[History Agent]
+H --> I[Windows Detection]
+H --> J[Raspberry Pi Detection]
 
-O --> P[History Query]
-O --> Q[History Analytics]
+I --> K[Flask API]
+J --> L[SSH + SCP]
+
+K --> M[YOLO-AMC]
+
+L --> N[ONNX Runtime]
+
+M --> O[Detection Results]
+
+N --> O
+
+G --> P[History Query]
+
+G --> Q[History Analytics]
+
+O --> B
+
+P --> B
+
+Q --> B
 ```
 
 ---
 
-## Demo
+# Screenshots
 
-### Crack Detection (GAM Model)
+## Multi-image Upload
 
-![GAM Detection](YOLO-AMC-Agent/video/GAM%20Detection.gif)
-
----
-
-### Edge AI Deployment (Raspberry Pi 5)
-
-![Edge Deployment](YOLO-AMC-Agent/video/Edge%20Deployment.gif)
+![](images/Multi-image%20Upload.jpg)
 
 ---
 
-### History Analytics
+## Detection Result Viewer
 
-![History Analytics](YOLO-AMC-Agent/video/History%20Analytics.gif)
-
----
-
-## Features
-
-### Crack Detection
-
-* Automatic model selection
-* SA (Fast Detection Mode)
-* GAM (Accurate Detection Mode)
-* Windows local inference
-* Raspberry Pi remote inference
-
-### Edge Deployment
-
-* SSH remote execution
-* Raspberry Pi 5 ONNX Runtime inference
-* Automatic result synchronization
-
-### History Analytics
-
-* Confidence trend analysis
-* Execution time trend analysis
-* GAM vs SA comparison
-* Windows vs Raspberry Pi comparison
-
-### Knowledge Assistant
-
-* Confidence
-* FPS
-* Bounding Box
-* YOLO-AMC
-* GAM vs SA
-
-### Technology Stack
-
-* Raspberry Pi 5
-* SSH
-* Ollama
-* n8n
-* Flask API
-* YOLO-AMC
-* ONNX Runtime
-* JSON-based History Database
+![](images/Detection%20Result%20Viewer.jpg)
 
 ---
 
-## Installation
+## Multi-Agent Workflow
 
-```bash
-pip install -r requirements.txt
+![](images/Multi-Agent%20Workflow.jpg)
+
+---
+
+# Project Structure
+
+```text
+YOLO-AMC-Agent
+│
+├── streamlit_app.py
+├── n8n_yolo_api.py
+├── detect_yolo_n8n.py
+├── YOLO-AMC-Agent.json
+│
+├── images/
+├── video/
+├── image_save/
+├── result/
+├── pi_result/
+├── weights/
+└── README.md
 ```
 
-### Requirements
+---
 
-* Python 3.10+
-* Flask
-* Ultralytics
-* OpenCV
+# Technologies
+
+- Python
+- Streamlit
+- n8n
+- Flask
+- YOLO11
+- YOLO-AMC (GAM / SA)
+- ONNX Runtime
+- Ollama
+- Qwen3
+- Raspberry Pi 5
+- SSH / SCP
 
 ---
 
-## Notes
+# Additional Demonstrations
 
-Model weights and datasets are not included in this repository.
+The following demonstration videos are also included in this repository:
 
-This repository focuses on the system architecture, workflow design, multi-agent routing, edge deployment, and historical analytics of the YOLO-AMC Agent.
+- Windows Detection + Trend Analysis
+- Raspberry Pi Detection + History Query
+- History Analytics
+- Knowledge Assistant
 
-Please refer to the demo videos for system demonstration.
+---
 
+# Notes
 
+- Model weights are **not included** in this repository.
+- Please place trained model weights inside the `weights/` directory before running local detection.
+- Update local project paths in the configuration files before execution.
+- Configure Raspberry Pi SSH settings according to your own environment.
+- This project is intended for research and educational purposes.
 
+---
 
+# License
+
+MIT License
